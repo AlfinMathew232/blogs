@@ -9,8 +9,8 @@ class CommentInline(admin.TabularInline):
 
 @admin.register(Blogger)
 class BloggerAdmin(admin.ModelAdmin):
-    list_display = ('user', 'phone_number', 'date_of_birth')
-    search_fields = ('user__username', 'phone_number')
+    list_display = ['user', 'bio', 'created_date']
+    search_fields = ['user__username', 'bio']
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):

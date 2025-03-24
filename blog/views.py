@@ -8,8 +8,17 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.db.models import Count
-from .models import BlogPost, Comment, Blogger, Like
-from .forms import BlogPostForm, CommentForm, BloggerForm, ExtendedUserCreationForm
+from django.contrib.auth.views import (
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView
+)
+from .models import BlogPost, Comment, Blogger, Like, SavedBlog
+from .forms import BlogPostForm, CommentForm, BloggerForm, ExtendedUserCreationForm, CustomPasswordResetForm
+from django.contrib.auth.models import User
+from django.conf import settings
+from django.contrib.sites.shortcuts import get_current_site
 
 class BlogListView(ListView):
     model = BlogPost
@@ -91,7 +100,7 @@ def delete_blog_post(request, pk):
         post.delete()
         messages.success(request, 'Blog post deleted successfully!')
         return redirect('blog-list')
-    return render(request, 'blog/delete_blog_post.html', {'post': post})
+    return render(request, 'blog/delete_blog_post.html', {'blogpost': post})
 
 @login_required
 def add_comment(request, pk):
@@ -172,3 +181,108 @@ def check_post_password(request, pk):
         else:
             messages.error(request, 'Incorrect password!')
     return redirect('blog-detail', pk=pk)
+
+@login_required
+def save_blog(request, pk):
+    post = get_object_or_404(BlogPost, pk=pk)
+    saved_blog, created = SavedBlog.objects.get_or_create(user=request.user, post=post)
+    
+    if created:
+        messages.success(request, 'Blog post saved successfully!')
+    else:
+        messages.info(request, 'Blog post was already saved.')
+    
+    return redirect('blog-detail', pk=pk)
+
+@login_required
+def unsave_blog(request, pk):
+    post = get_object_or_404(BlogPost, pk=pk)
+    SavedBlog.objects.filter(user=request.user, post=post).delete()
+    messages.success(request, 'Blog post removed from saved items.')
+    return redirect('blog-detail', pk=pk)
+
+class SavedBlogsListView(LoginRequiredMixin, ListView):
+    model = SavedBlog
+    template_name = 'blog/saved_blogs.html'
+    context_object_name = 'saved_blogs'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return SavedBlog.objects.filter(user=self.request.user).select_related('post')
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'registration/password_reset_form.html'
+    email_template_name = 'registration/password_reset_email.html'
+    subject_template_name = 'registration/password_reset_subject.txt'
+    success_url = reverse_lazy('password_reset_done')
+
+    def send_mail(self, subject_template_name, email_template_name,
+                  context, from_email, to_email, html_email_template_name=None):
+        current_site = get_current_site(self.request)
+        # Ensure the domain doesn't have any leading or trailing slashes
+        site_domain = settings.SITE_DOMAIN.strip('/')
+        context.update({
+            'site_name': current_site.name,
+            'site_domain': site_domain,
+            'protocol': 'http',
+        })
+        super().send_mail(subject_template_name, email_template_name,
+                         context, from_email, to_email, html_email_template_name)
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'registration/password_reset_done.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = reverse_lazy('password-reset-complete')
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'registration/password_reset_complete.html'
+
+class BloggerProfileUpdateView(LoginRequiredMixin, UpdateView):
+    model = Blogger
+    template_name = 'blog/blogger_profile_update.html'
+    fields = ['bio']
+
+    def get_success_url(self):
+        return reverse_lazy('blogger-detail', kwargs={'pk': self.object.pk})
+
+    def get_object(self):
+        return self.request.user.blogger
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'Your profile has been updated successfully!')
+        return response
+
+@login_required
+def update_user_profile(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'update_username':
+            new_username = request.POST.get('username')
+            if new_username and new_username != request.user.username:
+                if User.objects.filter(username=new_username).exists():
+                    messages.error(request, 'Username already exists.')
+                else:
+                    request.user.username = new_username
+                    request.user.save()
+                    messages.success(request, 'Username updated successfully!')
+        
+        elif action == 'update_password':
+            old_password = request.POST.get('old_password')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            if not request.user.check_password(old_password):
+                messages.error(request, 'Current password is incorrect.')
+            elif new_password != confirm_password:
+                messages.error(request, 'New passwords do not match.')
+            else:
+                request.user.set_password(new_password)
+                request.user.save()
+                messages.success(request, 'Password updated successfully! Please login again.')
+                return redirect('login')
+    
+    return render(request, 'blog/update_user_profile.html')

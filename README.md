@@ -1,35 +1,39 @@
-# DIYBlog - A Django Blog Platform
+# DIY Blog
 
-A full-featured blog platform built with Django, focusing on DIY (Do It Yourself) content sharing.
+A Django-based blogging platform where users can create, share, and interact with blog posts.
 
 ## Features
 
-- User Authentication (Register, Login, Logout)
-- Blog Post Management
-- Password Protected Posts
-- Interactive Polls
-- Comments System
-- Responsive Design
-- Azure Deployment Ready
+- User authentication (login, register, password reset)
+- Create, edit, and delete blog posts
+- Image and audio file upload support
+- Password-protected blog posts
+- Like and comment functionality
+- User profiles with bio
+- Save favorite blog posts
+- Responsive design with Bootstrap
 
 ## Prerequisites
 
-- Python 3.8+
-- Django 4.2+
-- Other dependencies listed in requirements.txt
+- Python 3.8 or higher
+- pip (Python package installer)
+- Git
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd DIYBlog
+git clone https://github.com/yourusername/diyblog.git
+cd diyblog
 ```
 
 2. Create and activate a virtual environment:
 ```bash
-python -m venv diyblogWindSurf
-source diyblogWindSurf/bin/activate  # On Windows: .\diyblogWindSurf\Scripts\activate
+python -m venv venv
+# On Windows
+venv\Scripts\activate
+# On Unix or MacOS
+source venv/bin/activate
 ```
 
 3. Install dependencies:
@@ -37,13 +41,17 @@ source diyblogWindSurf/bin/activate  # On Windows: .\diyblogWindSurf\Scripts\act
 pip install -r requirements.txt
 ```
 
-4. Create .env file:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
+4. Create a `.env` file in the project root with the following content:
+```
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1
+DATABASE_URL=sqlite:///db.sqlite3
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
 ```
 
-5. Run migrations:
+5. Apply database migrations:
 ```bash
 python manage.py migrate
 ```
@@ -58,73 +66,28 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Visit http://127.0.0.1:8000/ in your browser.
+8. Visit http://127.0.0.1:8000 in your browser
 
-## Project Structure
+## Email Configuration
 
-- `blog/` - Main application directory
-  - `models.py` - Database models
-  - `views.py` - View functions and classes
-  - `forms.py` - Form definitions
-  - `urls.py` - URL routing
-  - `admin.py` - Admin interface configuration
-  - `tests.py` - Unit tests
-  - `templatetags/` - Custom template tags
+For password reset functionality to work:
 
-- `templates/` - HTML templates
-  - `base.html` - Base template
-  - `blog/` - Blog-specific templates
-  - `registration/` - Authentication templates
-
-- `static/` - Static files (CSS, JavaScript)
-
-## Features in Detail
-
-### User Authentication
-- Registration with extended profile (phone, DOB)
-- Login/Logout functionality
-- Password reset capability
-
-### Blog Posts
-- Create, Read, Update, Delete operations
-- Password protection option
-- Rich text content
-- Pagination (5 posts per page)
-
-### Interactive Polls
-- Add polls to blog posts
-- Multiple options support
-- Real-time voting system
-
-### Comments
-- Add comments to blog posts
-- Comment moderation in admin
-- Nested display
-
-## Testing
-
-Run the test suite:
-```bash
-python manage.py test
-```
-
-## Deployment
-
-The project is configured for Microsoft Azure deployment:
-
-1. Create an Azure Web App
-2. Configure environment variables
-3. Set up database
-4. Deploy using Azure CLI or GitHub Actions
+1. Enable 2-Step Verification on your Gmail account
+2. Generate an App Password:
+   - Go to Google Account settings
+   - Security > 2-Step Verification > App passwords
+   - Select "Mail" and your device
+   - Copy the generated password
+3. Add the App Password to your `.env` file
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch
+2. Create a new branch for your feature
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.

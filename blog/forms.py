@@ -1,16 +1,11 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from .models import Comment, BlogPost, Blogger
 
 class ExtendedUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
-    phone_number = forms.CharField(max_length=15, required=True)
-    date_of_birth = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
-        required=True
-    )
     bio = forms.CharField(widget=forms.Textarea, required=False)
 
     class Meta:
@@ -25,8 +20,6 @@ class ExtendedUserCreationForm(UserCreationForm):
             user.save()
             blogger = Blogger.objects.create(
                 user=user,
-                phone_number=self.cleaned_data['phone_number'],
-                date_of_birth=self.cleaned_data['date_of_birth'],
                 bio=self.cleaned_data['bio']
             )
         return user
@@ -34,10 +27,11 @@ class ExtendedUserCreationForm(UserCreationForm):
 class BlogPostForm(forms.ModelForm):
     class Meta:
         model = BlogPost
-        fields = ['title', 'content', 'is_protected', 'password', 'audio_file']
+        fields = ['title', 'content', 'is_protected', 'password', 'audio_file', 'image', 'image_caption']
         widgets = {
             'password': forms.PasswordInput(),
             'content': forms.Textarea(attrs={'rows': 10}),
+            'image_caption': forms.TextInput(attrs={'placeholder': 'Enter image caption (optional)'}),
         }
 
     def clean_audio_file(self):
@@ -51,6 +45,16 @@ class BlogPostForm(forms.ModelForm):
             
             self.instance.has_audio = True
         return audio_file
+
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        if image:
+            if image.size > 5 * 1024 * 1024:  # 5MB
+                raise ValidationError('Image file must be less than 5MB')
+            
+            if not image.content_type.startswith('image/'):
+                raise ValidationError('Please upload a valid image file')
+        return image
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -73,9 +77,15 @@ class PasswordProtectedPostForm(forms.Form):
 class BloggerForm(forms.ModelForm):
     class Meta:
         model = Blogger
-        fields = ['bio', 'phone_number', 'date_of_birth']
+        fields = ['bio']
         widgets = {
-            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
+
+class CustomPasswordResetForm(PasswordResetForm):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address'
+        })
+    )

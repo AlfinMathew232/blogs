@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -27,9 +26,12 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
+staticfiles/
 
-# Virtual Environment
-diyblogWindSurf/
+# Environment variables
+.env
+.venv
+env/
 venv/
 ENV/
 
@@ -38,12 +40,15 @@ ENV/
 .vscode/
 *.swp
 *.swo
+.DS_Store
 
-# Environment variables
-.env
+# Project specific
+*.bak
+*.tmp
+*.temp
 
-# Static files
-staticfiles/
+# Virtual Environment
+diyblogWindSurf/
 
 # Azure
 *.publishsettings

@@ -6,8 +6,7 @@ from django.utils import timezone
 class Blogger(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(max_length=500, blank=True)
-    phone_number = models.CharField(max_length=15, blank=True)
-    date_of_birth = models.DateField(null=True, blank=True)
+    created_date = models.DateTimeField(default=timezone.now)
 
     def get_absolute_url(self):
         return reverse('blogger-detail', args=[str(self.id)])
@@ -25,6 +24,8 @@ class BlogPost(models.Model):
     password = models.CharField(max_length=50, blank=True)
     audio_file = models.FileField(upload_to='blog_audio/', blank=True, null=True)
     has_audio = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='blog_images/', blank=True, null=True)
+    image_caption = models.CharField(max_length=200, blank=True)
 
     class Meta:
         ordering = ['-created_date']
@@ -66,3 +67,15 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'{self.content[:75]}...'
+
+class SavedBlog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(BlogPost, on_delete=models.CASCADE)
+    saved_date = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ['user', 'post']
+        ordering = ['-saved_date']
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.post.title}"

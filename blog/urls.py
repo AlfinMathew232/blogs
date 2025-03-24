@@ -12,5 +12,10 @@ urlpatterns = [
     path('post/<int:pk>/check-password/', views.check_post_password, name='check-post-password'),
     path('bloggers/', views.BloggerListView.as_view(), name='blogger-list'),
     path('blogger/<int:pk>/', views.BloggerDetailView.as_view(), name='blogger-detail'),
+    path('blogger/profile/update/', views.BloggerProfileUpdateView.as_view(), name='blogger-profile-update'),
+    path('user/settings/', views.update_user_profile, name='user-profile-update'),
     path('register/', views.register, name='register'),
+    path('save-blog/<int:pk>/', views.save_blog, name='save-blog'),
+    path('unsave-blog/<int:pk>/', views.unsave_blog, name='unsave-blog'),
+    path('saved-blogs/', views.SavedBlogsListView.as_view(), name='saved-blogs'),
 ]

@@ -35,6 +35,44 @@
                             {% endif %}
                         </div>
 
+                        <!-- Featured Image -->
+                        <div class="mb-4">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">
+                                <i class="fas fa-image me-1"></i>
+                                Featured Image
+                            </label>
+                            <input type="file" name="{{ form.image.name }}"
+                                   class="form-control {% if form.image.errors %}is-invalid{% endif %}"
+                                   id="{{ form.image.id_for_label }}"
+                                   accept="image/*">
+                            {% if form.image.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.image.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Maximum file size: 5MB. Supported formats: JPG, PNG, GIF
+                            </small>
+                        </div>
+
+                        <!-- Image Caption -->
+                        <div class="mb-4">
+                            <label for="{{ form.image_caption.id_for_label }}" class="form-label">
+                                <i class="fas fa-quote-left me-1"></i>
+                                Image Caption (Optional)
+                            </label>
+                            <input type="text" name="{{ form.image_caption.name }}"
+                                   class="form-control {% if form.image_caption.errors %}is-invalid{% endif %}"
+                                   id="{{ form.image_caption.id_for_label }}"
+                                   value="{{ form.image_caption.value|default:'' }}"
+                                   placeholder="Enter a caption for your image">
+                            {% if form.image_caption.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.image_caption.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+
                         <!-- Content -->
                         <div class="mb-4">
                             <label for="{{ form.content.id_for_label }}" class="form-label">Content</label>

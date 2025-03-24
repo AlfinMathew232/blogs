@@ -1,54 +1,70 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}{{ blogger.user.username }}'s Blogs{% endblock %}
+{% block title %}{{ blogger.user.username }}'s Profile{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Blogger Header -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h1 class="mb-3">{{ blogger.user.username }}'s Blogs</h1>
-            <div class="d-flex align-items-center text-muted mb-2">
-                <i class="fas fa-pencil-alt me-2"></i>
-                <span>Total Posts: {{ posts.count }}</span>
-                <i class="fas fa-heart ms-4 me-2"></i>
-                <span>Total Likes: 0</span>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h1 class="card-title">{{ blogger.user.username }}</h1>
+                    {% if user == blogger.user %}
+                        <div class="mb-3">
+                            <a href="{% url 'blogger-profile-update' %}" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-edit"></i> Edit Bio
+                            </a>
+                            <a href="{% url 'user-profile-update' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-user-cog"></i> Account Settings
+                            </a>
+                        </div>
+                    {% endif %}
+                    {% if blogger.bio %}
+                        <p class="card-text">{{ blogger.bio }}</p>
+                    {% endif %}
+                    <div class="d-flex align-items-center text-muted mb-2">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Member since {{ blogger.created_date|date:"F Y" }}
+                    </div>
+                </div>
             </div>
-            {% if blogger.bio %}
-            <p class="lead mb-0">{{ blogger.bio }}</p>
-            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">{{ blogger.user.username }}'s Blog Posts</h2>
+                    {% if blog_posts %}
+                        {% for post in blog_posts %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h3 class="card-title">
+                                        <a href="{% url 'blog-detail' post.pk %}" class="text-decoration-none">
+                                            {{ post.title }}
+                                        </a>
+                                    </h3>
+                                    <p class="card-text text-muted">
+                                        Posted on {{ post.created_date|date:"F d, Y" }}
+                                    </p>
+                                    {% if user == blogger.user %}
+                                        <div class="mt-2">
+                                            <a href="{% url 'blog-update' post.pk %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="{% url 'blog-delete' post.pk %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No blog posts yet.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
-
-    <!-- Blog Posts List -->
-    {% if posts %}
-    <div class="list-group">
-        {% for post in posts %}
-        <a href="{% url 'blog-detail' post.pk %}" class="list-group-item list-group-item-action">
-            <div class="d-flex w-100 justify-content-between align-items-center">
-                <h5 class="mb-1">{{ post.title }}</h5>
-                <small class="text-muted">
-                    {{ post.post_date|date:"F j, Y" }}
-                </small>
-            </div>
-            <div class="d-flex mt-2">
-                <small class="text-muted me-3">
-                    <i class="fas fa-heart me-1"></i>
-                    0 likes
-                </small>
-                <small class="text-muted">
-                    <i class="fas fa-comments me-1"></i>
-                    {{ post.comment_set.count }} comments
-                </small>
-            </div>
-        </a>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>
-        No blog posts yet.
-    </div>
-    {% endif %}
 </div>
 {% endblock %}

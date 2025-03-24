@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome to DIYBlog{% endblock %}
+{% block title %}Welcome to Blog{% endblock %}
 
 {% block content %}
 <div class="jumbotron text-center bg-light p-5 rounded-3">
-    <h1 class="display-4">Welcome to DIYBlog</h1>
-    <p class="lead">Share your DIY projects and ideas with our community!</p>
+    <h1 class="display-4">Welcome to Blog</h1>
+    <p class="lead">Share your projects and ideas with our community!</p>
     {% if user.is_authenticated %}
     <a href="{% url 'create-blog' %}" class="btn btn-primary btn-lg">Create a Blog Post</a>
     {% else %}
@@ -30,8 +30,8 @@
             <div class="card-body">
                 <h5 class="card-title">Why DIYBlog?</h5>
                 <ul class="list-unstyled">
-                    <li><i class="fas fa-check text-success"></i> Share your DIY experiences</li>
-                    <li><i class="fas fa-check text-success"></i> Connect with fellow DIY enthusiasts</li>
+                    <li><i class="fas fa-check text-success"></i> Share your  experiences</li>
+                    <li><i class="fas fa-check text-success"></i> Connect with fellow enthusiasts</li>
                     <li><i class="fas fa-check text-success"></i> Get inspired by amazing projects</li>
                     <li><i class="fas fa-check text-success"></i> Interactive polls and discussions</li>
                 </ul>

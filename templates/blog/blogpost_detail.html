@@ -1,195 +1,100 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ blogpost.title }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    {% if has_access %}
     <div class="row">
         <div class="col-md-8 mx-auto">
-            <article class="blog-post">
-                <h1 class="mb-3">{{ blogpost.title }}</h1>
-                
-                <div class="blog-meta text-muted mb-4">
-                    <small>
-                        <i class="fas fa-user me-2"></i>
-                        <a href="{% url 'blogger-detail' blogpost.author.pk %}" class="text-decoration-none">
-                            {{ blogpost.author.user.username }}
-                        </a>
-                        <i class="fas fa-calendar-alt ms-3 me-2"></i>
-                        {{ blogpost.created_date|date:"F j, Y" }}
-                        {% if blogpost.has_audio %}
-                        <i class="fas fa-microphone ms-3 me-2"></i>
-                        <span>Audio Available</span>
-                        {% endif %}
-                    </small>
-                </div>
-
-                {% if blogpost.has_audio %}
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="fas fa-headphones me-2"></i>
-                            Listen to this post
-                        </h5>
-                        <audio controls class="w-100 mt-2">
-                            <source src="{{ blogpost.audio_file.url }}" type="audio/mpeg">
-                            Your browser does not support the audio element.
-                        </audio>
-                    </div>
-                </div>
+            <div class="card">
+                {% if blogpost.image %}
+                    <img src="{{ blogpost.image.url }}" class="card-img-top" alt="{{ blogpost.title }}">
+                    {% if blogpost.image_caption %}
+                        <div class="card-img-caption text-muted text-center">
+                            {{ blogpost.image_caption }}
+                        </div>
+                    {% endif %}
                 {% endif %}
-
-                <div class="blog-content mb-4">
-                    {{ blogpost.content|linebreaks }}
-                </div>
-
-                <div class="blog-actions mb-4">
-                    {% if user.is_authenticated %}
-                    <button class="btn {% if user_has_liked %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm me-2" 
-                            data-post-id="{{ blogpost.pk }}"
-                            onclick="toggleLike(this.getAttribute('data-post-id'))"
-                            type="button">
-                        <i class="fas fa-heart"></i>
-                        <span id="likes-count">{{ blogpost.get_likes_count }}</span> Like{% if blogpost.get_likes_count != 1 %}s{% endif %}
-                    </button>
-                    {% endif %}
+                
+                <div class="card-body">
+                    <h1 class="card-title">{{ blogpost.title }}</h1>
+                    <p class="text-muted">
+                        By <a href="{% url 'blogger-detail' blogpost.author.pk %}">{{ blogpost.author.user.username }}</a>
+                        on {{ blogpost.created_date|date:"F d, Y" }}
+                    </p>
                     
-                    {% if user.is_authenticated and user == blogpost.author.user %}
-                    <a href="{% url 'blog-update' blogpost.pk %}" class="btn btn-outline-primary btn-sm me-2">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
-                    <a href="{% url 'blog-delete' blogpost.pk %}" class="btn btn-outline-danger btn-sm">
-                        <i class="fas fa-trash"></i> Delete
-                    </a>
-                    {% endif %}
-                </div>
-
-                <!-- Comments Section -->
-                <div class="comments-section">
-                    <h3 class="mb-4">Comments</h3>
-                    
-                    {% if user.is_authenticated %}
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <form method="post" action="{% url 'add-comment' blogpost.pk %}">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <textarea name="content" class="form-control" placeholder="Write your comment..." rows="3"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Add Comment</button>
-                            </form>
-                        </div>
+                    <div class="mb-4">
+                        {{ blogpost.content|linebreaks }}
                     </div>
-                    {% endif %}
 
-                    {% if comments %}
-                    <div class="comments-list">
-                        {% for comment in comments %}
-                        <div class="comment card mb-3">
-                            <div class="card-body">
-                                <div class="comment-meta text-muted mb-2">
-                                    <small>
-                                        <i class="fas fa-user me-1"></i>
-                                        {{ comment.author.username }}
-                                        <i class="fas fa-clock ms-2 me-1"></i>
-                                        {{ comment.created_date|timesince }} ago
-                                    </small>
-                                </div>
-                                <div class="comment-content">
-                                    {{ comment.content|linebreaks }}
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="fas fa-comments me-2"></i>
-                        No comments yet. Be the first to comment!
-                    </div>
-                    {% endif %}
-                </div>
-
-                {% if blogpost.poll %}
-                <div class="poll card mb-5">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ blogpost.poll.question }}</h5>
-                        <div id="pollContent">
-                            {% if user.is_authenticated %}
-                                {% if not user_has_voted %}
-                                    <form method="post" action="{% url 'vote-poll' blogpost.poll.pk %}" id="pollForm">
-                                        {% csrf_token %}
-                                        {% for option in blogpost.poll.polloption_set.all %}
-                                        <div class="poll-option mb-2">
-                                            <button type="submit" name="option" value="{{ option.pk }}" class="btn btn-outline-primary w-100 text-start">
-                                                {{ option.option_text }}
-                                                <span class="badge bg-secondary float-end">{{ option.votes.count }} vote{{ option.votes.count|pluralize }}</span>
-                                            </button>
-                                        </div>
-                                        {% endfor %}
-                                    </form>
-                                {% else %}
-                                    <div class="poll-results">
-                                        <p class="text-muted mb-3">Total votes: <span id="totalVotes">{{ total_votes }}</span></p>
-                                        {% for option in poll_options %}
-                                        <div class="poll-result mb-3">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span>{{ option.option_text }}</span>
-                                                <span class="badge bg-secondary" id="votes-{{ option.id }}">
-                                                    {{ option.votes_count }} vote{{ option.votes_count|pluralize }}
-                                                </span>
-                                            </div>
-                                            <div class="progress">
-                                                <div class="progress-bar bg-primary" role="progressbar" 
-                                                     style="width: 0%" 
-                                                     aria-valuenow="{{ option.percentage }}" 
-                                                     aria-valuemin="0" 
-                                                     aria-valuemax="100"
-                                                     id="progress-{{ option.id }}">
-                                                    {{ option.percentage }}%
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        {% if user.is_authenticated %}
+                            <button onclick="toggleLike({{ blogpost.pk }})" class="btn {% if user_has_liked %}btn-danger{% else %}btn-outline-danger{% endif %} me-2">
+                                <i class="{% if user_has_liked %}fas{% else %}far{% endif %} fa-heart"></i>
+                                <span id="likes-count">{{ blogpost.get_likes_count }}</span>
+                            </button>
+                            
+                            {% if blogpost in user.savedblog_set.all %}
+                                <a href="{% url 'unsave-blog' blogpost.pk %}" class="btn btn-outline-warning me-2">
+                                    <i class="fas fa-bookmark"></i> Remove from Saved
+                                </a>
                             {% else %}
-                                <div class="alert alert-info">
-                                    Please <a href="{% url 'login' %}?next={{ request.path }}">login</a> to vote in this poll.
+                                <a href="{% url 'save-blog' blogpost.pk %}" class="btn btn-outline-warning me-2">
+                                    <i class="far fa-bookmark"></i> Save Post
+                                </a>
+                            {% endif %}
+                            
+                            {% if user == blogpost.author.user %}
+                                <div>
+                                    <a href="{% url 'blog-update' blogpost.pk %}" class="btn btn-outline-secondary me-2">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="{% url 'blog-delete' blogpost.pk %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
                                 </div>
                             {% endif %}
-                        </div>
+                        {% else %}
+                            <div>
+                                <i class="far fa-heart"></i> {{ blogpost.get_likes_count }} likes
+                                <small>(Login to like this post)</small>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
-            </article>
-        </div>
-    </div>
-    {% else %}
-    <div class="row">
-        <div class="col-md-6 mx-auto">
-            <div class="card">
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card mt-4">
                 <div class="card-body">
-                    <h3 class="card-title text-center mb-4">
-                        <i class="fas fa-lock me-2"></i>
-                        Protected Post
-                    </h3>
-                    <form method="post" action="{% url 'check-post-password' blogpost.pk %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_password" class="form-label">Enter Password</label>
-                            <input type="password" name="password" class="form-control" id="id_password" required>
+                    <h3>Comments</h3>
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'add-comment' blogpost.pk %}" class="mb-4">
+                            {% csrf_token %}
+                            {{ comment_form.as_p }}
+                            <button type="submit" class="btn btn-primary">Add Comment</button>
+                        </form>
+                    {% endif %}
+
+                    {% for comment in comments %}
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <p class="card-text">{{ comment.content }}</p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        By {{ comment.author.username }} on {{ comment.created_date|date:"F d, Y" }}
+                                    </small>
+                                </p>
+                            </div>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Access Post</button>
-                        </div>
-                    </form>
+                    {% empty %}
+                        <p class="text-muted">No comments yet. Be the first to comment!</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 
@@ -207,98 +112,26 @@ function toggleLike(postId) {
     .then(data => {
         if (data.success) {
             const likeButton = document.querySelector('.btn-outline-danger, .btn-danger');
+            const likeIcon = likeButton.querySelector('i');
             const likesCount = document.getElementById('likes-count');
             
-            likeButton.classList.toggle('btn-outline-danger');
-            likeButton.classList.toggle('btn-danger');
+            // Update like count
             likesCount.textContent = data.likes_count;
+            
+            // Toggle button appearance
+            if (data.is_liked) {
+                likeButton.classList.remove('btn-outline-danger');
+                likeButton.classList.add('btn-danger');
+                likeIcon.classList.remove('far');
+                likeIcon.classList.add('fas');
+            } else {
+                likeButton.classList.remove('btn-danger');
+                likeButton.classList.add('btn-outline-danger');
+                likeIcon.classList.remove('fas');
+                likeIcon.classList.add('far');
+            }
         }
     });
-}
-
-// Poll functionality
-const pollForm = document.getElementById('pollForm');
-const pollContent = document.getElementById('pollContent');
-
-if (pollForm) {
-    pollForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        fetch(this.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new FormData(this)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Create poll results HTML
-                let resultsHtml = `
-                    <div class="poll-results">
-                        <p class="text-muted mb-3">Total votes: <span id="totalVotes">${data.total_votes}</span></p>
-                `;
-                
-                data.results.forEach((result, index) => {
-                    resultsHtml += `
-                        <div class="poll-result mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span>${result.text}</span>
-                                <span class="badge bg-secondary" id="votes-${result.id}">
-                                    ${result.votes} vote${result.votes !== 1 ? 's' : ''}
-                                </span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar bg-primary" role="progressbar" 
-                                     style="width: 0%" 
-                                     aria-valuenow="${result.percentage}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100"
-                                     id="progress-${result.id}">
-                                    ${result.percentage}%
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                resultsHtml += '</div>';
-                
-                // Replace poll form with results
-                pollContent.innerHTML = resultsHtml;
-                
-                // Trigger animations
-                setTimeout(() => {
-                    data.results.forEach(result => {
-                        const progressBar = document.getElementById(`progress-${result.id}`);
-                        if (progressBar) {
-                            progressBar.style.width = `${result.percentage}%`;
-                        }
-                    });
-                    
-                    document.querySelectorAll('.poll-result').forEach(el => {
-                        el.classList.add('show');
-                    });
-                }, 100);
-            }
-        });
-    });
-}
-
-// Show poll results with animation on page load
-const pollResults = document.querySelectorAll('.poll-result');
-if (pollResults.length > 0) {
-    setTimeout(() => {
-        pollResults.forEach((result, index) => {
-            const progressBar = result.querySelector('.progress-bar');
-            if (progressBar) {
-                progressBar.style.width = progressBar.getAttribute('aria-valuenow') + '%';
-            }
-            result.classList.add('show');
-        });
-    }, 100);
 }
 </script>
 {% endblock %}

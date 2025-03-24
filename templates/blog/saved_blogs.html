@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Your Saved Blogs</h2>
+    
+    {% if saved_blogs %}
+        <div class="row">
+            {% for saved in saved_blogs %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        {% if saved.post.image %}
+                            <img src="{{ saved.post.image.url }}" class="card-img-top" alt="{{ saved.post.title }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ saved.post.title }}</h5>
+                            <p class="card-text">{{ saved.post.content|truncatewords:30 }}</p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    By {{ saved.post.author.user.username }} on {{ saved.post.created_date|date:"F d, Y" }}
+                                </small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{% url 'blog-detail' saved.post.pk %}" class="btn btn-primary">Read More</a>
+                                <a href="{% url 'unsave-blog' saved.post.pk %}" class="btn btn-outline-danger">
+                                    <i class="fas fa-bookmark"></i> Remove
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            You haven't saved any blog posts yet. Start exploring and save posts you like!
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 
